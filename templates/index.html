@@ -5,6 +5,20 @@
 {% block og_url %}https://watercolor.ai/{% endblock %}
 
 {% block content %}
+
+{% if recent_images and recent_images|length >= 4 %}
+<div class="marquee-wrap mb-5" aria-hidden="true">
+  <div class="marquee-track" style="animation-duration: {{ recent_images|length * 3 }}s">
+    {% for img in recent_images %}
+      <img src="{{ img.image_url }}" class="marquee-img revealed" alt="" draggable="false" onerror="this.style.display='none'" />
+    {% endfor %}
+    {% for img in recent_images %}
+      <img src="{{ img.image_url }}" class="marquee-img revealed" alt="" draggable="false" onerror="this.style.display='none'" />
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <div class="row justify-content-center">
   <div class="col-12 col-md-8 col-lg-6">
 

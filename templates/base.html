@@ -54,8 +54,8 @@
   <div class="container">
     <a class="navbar-brand" href="/"><img src="https://cdn.openworldregister.com/justwater/logo.png" alt="Just Water" class="navbar-logo" onerror="this.src='/static/icons/icon-192.png'" /></a>
     <div class="nav-actions">
-      <a class="nav-link-gallery" href="/gallery">Gallery</a>
       {% if user is defined and user %}
+        <a class="nav-link-gallery" href="/gallery/{{ user.id }}">My Gallery</a>
         <a class="nav-link-gallery" href="/profile">
           {% if user.avatar_url %}
             <img src="{{ user.avatar_url }}" class="nav-avatar" alt="avatar" />

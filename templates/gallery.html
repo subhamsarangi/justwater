@@ -4,15 +4,28 @@
 {% block robots %}<meta name="robots" content="noindex, follow" />{% endblock %}
 
 {% block content %}
-<h2 class="section-heading mb-4">Past Works</h2>
+<div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
+  <div>
+    <h2 class="section-heading mb-0">
+      {% if user and user.id == owner.id %}My Gallery{% else %}{{ owner.name or "Anonymous" }}'s Works{% endif %}
+    </h2>
+    {% if user and user.id != owner.id %}
+      <p class="meta-text mt-1">{{ owner.email }}</p>
+    {% endif %}
+  </div>
+  {% if user and user.id == owner.id %}
+    <a href="/" class="btn-generate">New →</a>
+  {% endif %}
+</div>
 
 {% if not jobs %}
   <p class="text-muted text-center py-5">No generations yet. <a href="/">Create one →</a></p>
 {% else %}
   <div class="row g-3">
     {% for job in jobs %}
+    {% if user and user.id == owner.id or job.status != 'failed' %}
     <div class="col-6 col-md-4 col-lg-3">
-      <a href="/result/{{ job.id }}" class="gallery-card-link">
+      <a href="/result/{{ job.prompt_id }}" class="gallery-card-link">
         <div class="gallery-card">
 
           {% if job.status == 'done' %}
@@ -44,6 +57,7 @@
         </div>
       </a>
     </div>
+    {% endif %}
     {% endfor %}
   </div>
 {% endif %}

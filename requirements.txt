@@ -10,3 +10,4 @@ authlib
 itsdangerous
 httpx
 passlib[bcrypt]
+boto3

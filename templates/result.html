@@ -3,39 +3,93 @@
 
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-12 col-md-8 col-lg-6 text-center">
+  <div class="col-12 col-md-10 col-lg-8 text-center">
 
-    {% if job.status == 'done' %}
+    {% set any_done = job_wc.status == 'done' or job_ink.status == 'done' %}
+    {% set any_failed = job_wc.status == 'failed' or job_ink.status == 'failed' %}
+    {% set nsfw = job_wc.nsfw_flagged or job_ink.nsfw_flagged %}
 
-      <div class="image-wrapper mb-4">
-        <img
-          src="{{ job.image_url }}"
-          alt="Generated watercolor"
-          class="generated-image{% if not job.nsfw_flagged %} revealed{% endif %}"
-          id="result-image"
-        />
+    {% if any_done %}
+
+      <div class="row g-3 mb-4">
+
+        {% if job_wc.status == 'done' %}
+        <div class="col-12 col-sm-6">
+          <p class="meta-text mb-2">Watercolor</p>
+          <div class="image-wrapper">
+            <img src="{{ job_wc.image_url }}" alt="Watercolor"
+              class="generated-image{% if not nsfw %} revealed{% endif %}" id="result-image-1" />
+          </div>
+          <a class="btn-secondary-action mt-2 d-inline-block" href="{{ job_wc.image_url }}" download>Download</a>
+        </div>
+        {% endif %}
+
+        {% if job_ink.status == 'done' %}
+        <div class="col-12 col-sm-6">
+          <p class="meta-text mb-2">Ink Wash</p>
+          <div class="image-wrapper">
+            <img src="{{ job_ink.image_url }}" alt="Ink Wash"
+              class="generated-image{% if not nsfw %} revealed{% endif %}" id="result-image-2" />
+          </div>
+          <a class="btn-secondary-action mt-2 d-inline-block" href="{{ job_ink.image_url }}" download>Download</a>
+        </div>
+        {% endif %}
+
       </div>
 
       <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
-        {% if job.nsfw_flagged %}
+        {% if nsfw %}
         <button class="btn-secondary-action" id="reveal-btn">Reveal</button>
         {% endif %}
-        <a class="btn-secondary-action" href="{{ job.image_url }}" download>Download</a>
         <a class="btn-generate" href="/">New →</a>
+        {% if user and user.id == job_wc.user_id %}
+        <button class="btn-delete" id="delete-btn">Delete</button>
+        <div class="modal-overlay" id="delete-modal">
+          <div class="modal-box">
+            <p class="modal-title">Delete this painting?</p>
+            <p class="modal-body">This will permanently remove both images and cannot be undone.</p>
+            <div class="modal-actions">
+              <button class="btn-secondary-action" id="modal-cancel">Cancel</button>
+              <form method="POST" action="/delete/{{ job_wc.id }}">
+                <button type="submit" class="btn-delete">Yes, delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}
       </div>
 
-      <p class="prompt-preview">"{{ job.prompt }}"</p>
-      <p class="meta-text mt-1">Generated in {{ "%.1f"|format(job.duration_ms / 1000) }}s</p>
+      <p class="prompt-preview">"{{ job_wc.prompt }}"</p>
+      {% if job_wc.duration_ms %}
+      <p class="meta-text mt-1">Generated in {{ "%.1f"|format(job_wc.duration_ms / 1000) }}s</p>
+      {% endif %}
 
     {% else %}
 
       <div class="error-card mb-4">
         <div class="error-icon">💧</div>
         <h3>Couldn't paint this one</h3>
-        <p class="error-reason">{{ job.error_message or "Unknown error" }}</p>
+        <p class="error-reason">{{ job_wc.error_message or job_ink.error_message or "Unknown error" }}</p>
       </div>
 
-      <a class="btn-generate" href="/">Try Again</a>
+      <div class="d-flex justify-content-center gap-3 flex-wrap">
+        <a class="btn-generate" href="/">Try Again</a>
+        {% if user and user.id == job_wc.user_id %}
+        <button class="btn-delete" id="delete-btn">Delete</button>
+        <div class="modal-overlay" id="delete-modal">
+          <div class="modal-box">
+            <p class="modal-title">Delete this entry?</p>
+            <p class="modal-body">This will remove the failed job from your gallery.</p>
+            <div class="modal-actions">
+              <button class="btn-secondary-action" id="modal-cancel">Cancel</button>
+              <form method="POST" action="/delete/{{ job_wc.id }}">
+                <button type="submit" class="btn-delete">Yes, delete</button>
+              </form>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+      </div>
 
     {% endif %}
 
@@ -45,17 +99,28 @@
 
 {% block scripts %}
 <script>
-  {% if job.status == 'done' %}
-    const durationS = ({{ job.duration_ms }} / 1000).toFixed(1);
+  {% if job_wc.status == 'done' or job_ink.status == 'done' %}
+    {% set dur = job_wc.duration_ms or job_ink.duration_ms or 0 %}
+    const durationS = ({{ dur }} / 1000).toFixed(1);
     showToast('✓ Done in ' + durationS + 's', 'success');
 
     $('#reveal-btn').on('click', function() {
-      const img = $('#result-image');
-      img.toggleClass('revealed');
-      $(this).text(img.hasClass('revealed') ? 'Blur' : 'Reveal');
+      $('.generated-image').toggleClass('revealed');
+      $(this).text($('#result-image-1').hasClass('revealed') ? 'Blur' : 'Reveal');
     });
   {% else %}
-    showToast('✗ Failed: {{ job.error_message | default("Generation failed") | replace("'", "\\'") }}', 'error');
+    {% set err = job_wc.error_message or job_ink.error_message or "Generation failed" %}
+    showToast('✗ Failed: {{ err | replace("'", "\\'") }}', 'error');
   {% endif %}
+
+  $('#delete-btn').on('click', function() {
+    $('#delete-modal').addClass('active');
+  });
+  $('#modal-cancel').on('click', function() {
+    $('#delete-modal').removeClass('active');
+  });
+  $('#delete-modal').on('click', function(e) {
+    if ($(e.target).is('#delete-modal')) $(this).removeClass('active');
+  });
 </script>
 {% endblock %}

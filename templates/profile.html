@@ -25,22 +25,37 @@
 
     <!-- Stats -->
     <div class="row g-3 mb-4">
-      <div class="col-4">
+      <div class="col-3">
         <div class="stat-card">
           <div class="stat-value">{{ stats.total }}</div>
           <div class="stat-label">Total</div>
         </div>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <div class="stat-card">
           <div class="stat-value" style="color: var(--color-success)">{{ stats.done }}</div>
           <div class="stat-label">Done</div>
         </div>
       </div>
-      <div class="col-4">
+      <div class="col-3">
         <div class="stat-card">
           <div class="stat-value" style="color: var(--color-error)">{{ stats.failed }}</div>
           <div class="stat-label">Failed</div>
+        </div>
+      </div>
+      <div class="col-3">
+        <div class="stat-card">
+          {% set size = stats.total_size_bytes %}
+          {% if size >= 1048576 %}
+            <div class="stat-value" style="font-size:1.4rem">{{ "%.1f"|format(size / 1048576) }}</div>
+            <div class="stat-label">MB stored</div>
+          {% elif size >= 1024 %}
+            <div class="stat-value" style="font-size:1.4rem">{{ "%.1f"|format(size / 1024) }}</div>
+            <div class="stat-label">KB stored</div>
+          {% else %}
+            <div class="stat-value" style="font-size:1.4rem">{{ size }}</div>
+            <div class="stat-label">B stored</div>
+          {% endif %}
         </div>
       </div>
     </div>

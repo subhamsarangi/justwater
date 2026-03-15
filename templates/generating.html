@@ -13,6 +13,7 @@
 
     <h2 class="generating-title mt-4">Painting your scene…</h2>
     <p class="prompt-preview mt-2">"{{ job.prompt }}"</p>
+    <p class="meta-text mt-1">Generating watercolor &amp; ink wash…</p>
     <p class="elapsed-timer mt-3" id="elapsed">0:00</p>
 
   </div>
@@ -21,7 +22,7 @@
 
 {% block scripts %}
 <script>
-  const JOB_ID = "{{ job.id }}";
+  const PROMPT_ID = "{{ prompt_id }}";
   let seconds = 0;
 
   const timer = setInterval(function() {
@@ -31,19 +32,19 @@
     $('#elapsed').text(m + ':' + s);
   }, 1000);
 
-  function poll(jobId) {
-    $.getJSON('/api/status/' + jobId, function(data) {
+  function poll(promptId) {
+    $.getJSON('/api/status/' + promptId, function(data) {
       if (data.status === 'pending') {
-        setTimeout(function() { poll(jobId); }, 2000);
+        setTimeout(function() { poll(promptId); }, 2000);
       } else {
         clearInterval(timer);
-        window.location.href = '/result/' + jobId;
+        window.location.href = '/result/' + promptId;
       }
     }).fail(function() {
-      setTimeout(function() { poll(jobId); }, 3000);
+      setTimeout(function() { poll(promptId); }, 3000);
     });
   }
 
-  poll(JOB_ID);
+  poll(PROMPT_ID);
 </script>
 {% endblock %}

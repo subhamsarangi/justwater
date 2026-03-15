@@ -1,8 +1,10 @@
+import asyncio
 import os
+import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import BackgroundTasks, FastAPI, Form, Request
-from fastapi.responses import JSONResponse, RedirectResponse, HTMLResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from authlib.integrations.starlette_client import OAuth
@@ -14,11 +16,14 @@ from config import (
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     TOKEN_LIMIT,
+    WATERCOLOR_PROMPT,
+    INK_WASH_PROMPT,
 )
 from database import (
     create_job,
     get_all_jobs,
     get_job,
+    get_jobs_by_prompt_id,
     init_db,
     update_job_done,
     update_job_failed,
@@ -28,8 +33,12 @@ from database import (
     get_user_by_id,
     get_user_stats,
     update_user_tokens,
+    get_recent_images,
+    delete_job,
+    delete_jobs_by_prompt_id,
+    count_recent_jobs,
 )
-from generate import generate_watercolor, save_image
+from generate import _call_gemini, save_image, delete_image
 from auth import (
     hash_password,
     verify_password,
@@ -66,27 +75,41 @@ async def current_user(request: Request):
     return await get_current_user(request, get_user_by_id)
 
 
-def require_auth(request: Request):
-    token = request.cookies.get(SESSION_COOKIE)
-    return token is not None
+# ── Background tasks ───────────────────────────────────────────────────────
 
 
-# ── Background task ────────────────────────────────────────────────────────
+async def _run_single(job_id: str, style_prompt: str, prompt: str, user_id: str):
+    from concurrent.futures import ThreadPoolExecutor
 
-
-async def run_generation(job_id: str, prompt: str, user_id: str = None):
+    loop = asyncio.get_event_loop()
+    executor = ThreadPoolExecutor(max_workers=1)
     try:
-        image_bytes, nsfw_flagged, duration_ms, tokens_used = generate_watercolor(
-            prompt
+        image_bytes, nsfw_flagged, duration_ms, tokens_used = (
+            await loop.run_in_executor(executor, _call_gemini, style_prompt, prompt)
         )
-        image_path, image_url = save_image(image_bytes)
+        image_path, image_url, file_size_bytes = save_image(image_bytes)
         await update_job_done(
-            job_id, image_path, image_url, duration_ms, nsfw_flagged, tokens_used
+            job_id,
+            image_path,
+            image_url,
+            duration_ms,
+            nsfw_flagged,
+            tokens_used,
+            file_size_bytes,
         )
         if user_id and tokens_used:
             await update_user_tokens(user_id, tokens_used)
     except Exception as e:
         await update_job_failed(job_id, str(e))
+    finally:
+        executor.shutdown(wait=False)
+
+
+async def run_generation(prompt: str, job_wc: str, job_ink: str, user_id: str = None):
+    await asyncio.gather(
+        _run_single(job_wc, WATERCOLOR_PROMPT, prompt, user_id),
+        _run_single(job_ink, INK_WASH_PROMPT, prompt, user_id),
+    )
 
 
 # ── Auth routes ────────────────────────────────────────────────────────────
@@ -159,16 +182,13 @@ async def google_login(request: Request):
 async def google_callback(request: Request):
     token = await oauth.google.authorize_access_token(request)
     info = token.get("userinfo") or await oauth.google.userinfo(token=token)
-    google_id = info["sub"]
-    email = info["email"]
-    name = info.get("name", email)
-    avatar = info.get("picture")
+    google_id, email = info["sub"], info["email"]
+    name, avatar = info.get("name", email), info.get("picture")
 
     user = await get_user_by_google_id(google_id)
     if not user:
         user = await get_user_by_email(email)
         if user:
-            # link google to existing account
             from database import get_pool
 
             pool = await get_pool()
@@ -200,12 +220,7 @@ async def profile(request: Request):
     stats = await get_user_stats(user["id"])
     return templates.TemplateResponse(
         "profile.html",
-        {
-            "request": request,
-            "user": user,
-            "stats": stats,
-            "token_limit": TOKEN_LIMIT,
-        },
+        {"request": request, "user": user, "stats": stats, "token_limit": TOKEN_LIMIT},
     )
 
 
@@ -217,7 +232,10 @@ async def index(request: Request):
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
-    return templates.TemplateResponse("index.html", {"request": request, "user": user})
+    recent_images = await get_recent_images(10)
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "user": user, "recent_images": recent_images}
+    )
 
 
 @app.post("/generate")
@@ -227,6 +245,7 @@ async def generate(
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
+
     words = prompt.strip().split()
     if len(words) > 50:
         return templates.TemplateResponse(
@@ -239,59 +258,98 @@ async def generate(
             },
             status_code=422,
         )
-    job_id = await create_job(prompt, user["id"])
-    background_tasks.add_task(run_generation, job_id, prompt, user["id"])
-    return RedirectResponse(url=f"/generating/{job_id}", status_code=303)
+
+    recent = await count_recent_jobs(user["id"], seconds=60)
+    if recent >= 4:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "user": user,
+                "error": "You can only generate 4 images per minute. Please wait a moment.",
+                "prompt": prompt,
+            },
+            status_code=429,
+        )
+
+    prompt_id = str(uuid.uuid4())
+    job_wc = await create_job(
+        prompt, user["id"], prompt_id=prompt_id, style="watercolor"
+    )
+    job_ink = await create_job(
+        prompt, user["id"], prompt_id=prompt_id, style="ink_wash"
+    )
+    background_tasks.add_task(run_generation, prompt, job_wc, job_ink, user["id"])
+    return RedirectResponse(url=f"/generating/{prompt_id}", status_code=303)
 
 
-@app.get("/generating/{job_id}")
-async def generating(request: Request, job_id: str):
+@app.get("/generating/{prompt_id}")
+async def generating(request: Request, prompt_id: str):
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
-    job = await get_job(job_id)
-    if not job:
+    jobs = await get_jobs_by_prompt_id(prompt_id)
+    if not jobs:
         return RedirectResponse(url="/gallery")
     return templates.TemplateResponse(
-        "generating.html", {"request": request, "job": job, "user": user}
+        "generating.html",
+        {"request": request, "job": jobs[0], "prompt_id": prompt_id, "user": user},
     )
 
 
-@app.get("/api/status/{job_id}")
-async def api_status(job_id: str):
-    job = await get_job(job_id)
-    if not job:
-        return JSONResponse({"error": "Job not found"}, status_code=404)
-    data: dict = {"status": job["status"]}
-    if job["status"] == "done":
-        data["image_url"] = job["image_url"]
-        data["duration_ms"] = job["duration_ms"]
-    elif job["status"] == "failed":
-        data["error"] = job["error_message"]
-    return JSONResponse(data)
+@app.get("/api/status/{prompt_id}")
+async def api_status(prompt_id: str):
+    jobs = await get_jobs_by_prompt_id(prompt_id)
+    if not jobs:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    statuses = [j["status"] for j in jobs]
+    if all(s == "done" for s in statuses):
+        return JSONResponse({"status": "done"})
+    if any(s == "failed" for s in statuses):
+        return JSONResponse({"status": "failed"})
+    return JSONResponse({"status": "pending"})
 
 
-@app.get("/result/{job_id}")
-async def result(request: Request, job_id: str):
+@app.get("/result/{prompt_id}")
+async def result(request: Request, prompt_id: str):
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
-    job = await get_job(job_id)
-    if not job:
+    jobs = await get_jobs_by_prompt_id(prompt_id)
+    if not jobs:
         return RedirectResponse(url="/gallery")
+    job_wc = next((j for j in jobs if j["style"] == "watercolor"), jobs[0])
+    job_ink = next((j for j in jobs if j["style"] == "ink_wash"), jobs[-1])
     return templates.TemplateResponse(
-        "result.html", {"request": request, "job": job, "user": user}
+        "result.html",
+        {
+            "request": request,
+            "job_wc": job_wc,
+            "job_ink": job_ink,
+            "prompt_id": prompt_id,
+            "user": user,
+        },
     )
 
 
 @app.get("/gallery")
-async def gallery(request: Request):
+async def gallery_redirect(request: Request):
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
-    jobs = await get_all_jobs(user["id"])
+    return RedirectResponse(url=f"/gallery/{user['id']}", status_code=302)
+
+
+@app.get("/gallery/{user_id}")
+async def gallery(request: Request, user_id: str):
+    viewer = await current_user(request)
+    owner = await get_user_by_id(user_id)
+    if not owner:
+        return RedirectResponse(url="/")
+    jobs = await get_all_jobs(user_id)
     return templates.TemplateResponse(
-        "gallery.html", {"request": request, "jobs": jobs, "user": user}
+        "gallery.html",
+        {"request": request, "jobs": jobs, "user": viewer, "owner": owner},
     )
 
 
@@ -301,3 +359,28 @@ async def privacy(request: Request):
     return templates.TemplateResponse(
         "privacy.html", {"request": request, "user": user}
     )
+
+
+@app.post("/delete/{job_id}")
+async def delete(request: Request, job_id: str):
+    user = await current_user(request)
+    if not user:
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+    job = await get_job(job_id)
+    if not job:
+        return JSONResponse({"error": "Not found"}, status_code=404)
+    if job["user_id"] != user["id"]:
+        return JSONResponse({"error": "Forbidden"}, status_code=403)
+    # delete both jobs in the pair
+    prompt_id = job.get("prompt_id")
+    if prompt_id:
+        pair = await get_jobs_by_prompt_id(prompt_id)
+        for j in pair:
+            if j.get("image_path"):
+                delete_image(j["image_path"])
+        await delete_jobs_by_prompt_id(prompt_id)
+    else:
+        if job.get("image_path"):
+            delete_image(job["image_path"])
+        await delete_job(job_id)
+    return RedirectResponse(url=f"/gallery/{user['id']}", status_code=303)
