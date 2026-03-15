@@ -31,12 +31,13 @@ WATERCOLOR_PROMPT = """Generate this as a traditional watercolor painting with t
 Subject to paint:
 """
 
-INK_WASH_PROMPT = """Generate this as an East Asian ink wash painting (sumi-e) with the following qualities:
-- Monochromatic or near-monochromatic — black ink with subtle grey washes
-- Expressive, minimal brushwork — every stroke deliberate and visible
-- Large areas of empty white space (negative space is intentional)
-- Soft ink bleeds into wet paper, creating misty, diffused edges
-- Calligraphic energy — subjects feel alive through gesture, not detail
+INK_WASH_PROMPT = """Generate this as an ink wash painting inspired by sumi-e technique, with the following qualities:
+- Monochromatic — black ink with layered grey washes, no color
+- Minimal, expressive brushwork — every stroke intentional, nothing overworked
+- Generous empty white space used as a compositional element, not a void
+- Soft ink bleeds and diffused edges where ink meets wet paper
+- Subjects rendered through gesture and form, not fine detail
+- No text, no Chinese or Japanese characters, no calligraphy, no seals or stamps of any kind
 
 Subject to paint:
 """

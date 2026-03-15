@@ -340,15 +340,27 @@ async def gallery_redirect(request: Request):
 
 
 @app.get("/gallery/{user_id}")
-async def gallery(request: Request, user_id: str):
+async def gallery(request: Request, user_id: str, page: int = 1):
     viewer = await current_user(request)
     owner = await get_user_by_id(user_id)
     if not owner:
         return RedirectResponse(url="/")
-    jobs = await get_all_jobs(user_id)
+    all_jobs = await get_all_jobs(user_id)
+    per_page = 10
+    total = len(all_jobs)
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = max(1, min(page, total_pages))
+    jobs = all_jobs[(page - 1) * per_page : page * per_page]
     return templates.TemplateResponse(
         "gallery.html",
-        {"request": request, "jobs": jobs, "user": viewer, "owner": owner},
+        {
+            "request": request,
+            "jobs": jobs,
+            "user": viewer,
+            "owner": owner,
+            "page": page,
+            "total_pages": total_pages,
+        },
     )
 
 

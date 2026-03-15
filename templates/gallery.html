@@ -29,8 +29,10 @@
         <div class="gallery-card">
 
           {% if job.status == 'done' %}
+            {% set thumb = job.image_url_wc if loop.index0 % 2 == 0 else job.image_url_ink %}
+            {% set thumb = thumb or job.image_url_wc or job.image_url_ink %}
             <div class="gallery-thumb-wrap">
-              <img src="{{ job.image_url }}" alt="Watercolor" class="gallery-thumb generated-image{% if not job.nsfw_flagged %} revealed{% endif %}" />
+              <img src="{{ thumb }}" alt="{{ 'Watercolor' if loop.index0 % 2 == 0 else 'Ink Wash' }}" class="gallery-thumb generated-image{% if not job.nsfw_flagged %} revealed{% endif %}" />
             </div>
           {% elif job.status == 'pending' %}
             <div class="gallery-thumb-placeholder pending">
@@ -41,6 +43,9 @@
           {% endif %}
 
           <div class="gallery-card-body">
+            {% if job.status == 'done' %}
+            <p class="meta-text mb-1" style="font-size:0.7rem;">{{ 'Watercolor' if loop.index0 % 2 == 0 else 'Ink Wash' }}</p>
+            {% endif %}
             <p class="gallery-prompt">{{ job.prompt[:60] }}{% if job.prompt|length > 60 %}…{% endif %}</p>
             <div class="d-flex justify-content-between align-items-center mt-1">
               {% if job.status == 'done' %}
@@ -60,5 +65,24 @@
     {% endif %}
     {% endfor %}
   </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination-wrap mt-5">
+    {% if page > 1 %}
+      <a href="/gallery/{{ owner.id }}?page={{ page - 1 }}" class="page-btn">← Prev</a>
+    {% else %}
+      <span class="page-btn disabled">← Prev</span>
+    {% endif %}
+
+    <span class="page-indicator">{{ page }} / {{ total_pages }}</span>
+
+    {% if page < total_pages %}
+      <a href="/gallery/{{ owner.id }}?page={{ page + 1 }}" class="page-btn">Next →</a>
+    {% else %}
+      <span class="page-btn disabled">Next →</span>
+    {% endif %}
+  </div>
+  {% endif %}
+
 {% endif %}
 {% endblock %}

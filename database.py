@@ -227,14 +227,40 @@ async def get_all_jobs(user_id: str = None) -> list[dict]:
     async with pool.acquire() as conn:
         if user_id:
             rows = await conn.fetch(
-                """SELECT DISTINCT ON (prompt_id) * FROM jobs
-                   WHERE user_id=$1
-                   ORDER BY prompt_id, created_at DESC""",
+                """SELECT * FROM jobs WHERE user_id=$1 ORDER BY created_at DESC""",
                 user_id,
             )
         else:
             rows = await conn.fetch("SELECT * FROM jobs ORDER BY created_at DESC")
-    return [dict(r) for r in rows]
+
+    jobs = [dict(r) for r in rows]
+
+    if not user_id:
+        return jobs
+
+    # group by prompt_id, keep one merged dict per prompt with both image_urls
+    seen = {}
+    ordered = []
+    for job in jobs:
+        pid = job.get("prompt_id") or job["id"]
+        if pid not in seen:
+            seen[pid] = job.copy()
+            seen[pid]["image_url_wc"] = None
+            seen[pid]["image_url_ink"] = None
+            ordered.append(pid)
+        entry = seen[pid]
+        if job["style"] == "watercolor":
+            entry["image_url_wc"] = job["image_url"]
+        elif job["style"] == "ink_wash":
+            entry["image_url_ink"] = job["image_url"]
+        # surface the worst status
+        if job["status"] == "failed":
+            entry["status"] = "failed"
+            entry["error_message"] = job.get("error_message")
+        elif job["status"] == "pending" and entry["status"] != "failed":
+            entry["status"] = "pending"
+
+    return [seen[pid] for pid in ordered]
 
 
 async def get_recent_images(limit: int = 10) -> list[dict]:
