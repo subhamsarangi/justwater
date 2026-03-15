@@ -15,7 +15,7 @@
 
           {% if job.status == 'done' %}
             <div class="gallery-thumb-wrap">
-              <img src="{{ job.image_url }}" alt="Watercolor" class="gallery-thumb generated-image" />
+              <img src="{{ job.image_url }}" alt="Watercolor" class="gallery-thumb generated-image{% if not job.nsfw_flagged %} revealed{% endif %}" />
             </div>
           {% elif job.status == 'pending' %}
             <div class="gallery-thumb-placeholder pending">

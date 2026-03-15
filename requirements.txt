@@ -2,7 +2,7 @@ fastapi
 uvicorn[standard]
 jinja2
 python-dotenv
-google-generativeai
+google-genai
 aiofiles
 pillow
 asyncpg

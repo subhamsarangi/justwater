@@ -11,13 +11,15 @@
         <img
           src="{{ job.image_url }}"
           alt="Generated watercolor"
-          class="generated-image"
+          class="generated-image{% if not job.nsfw_flagged %} revealed{% endif %}"
           id="result-image"
         />
       </div>
 
       <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+        {% if job.nsfw_flagged %}
         <button class="btn-secondary-action" id="reveal-btn">Reveal</button>
+        {% endif %}
         <a class="btn-secondary-action" href="{{ job.image_url }}" download>Download</a>
         <a class="btn-generate" href="/">New →</a>
       </div>

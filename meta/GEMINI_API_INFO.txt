@@ -1,0 +1,7 @@
+API Key Source:   https://aistudio.google.com
+Model:            gemini-2.5-flash-image
+Package:          google-genai 1.67.0
+SDK Docs:         https://googleapis.github.io/python-genai/
+Model supports:   generateContent, batchGenerateContent, countTokens
+Response mode:    response_modalities=["IMAGE"]
+Image output:     inline bytes (base64), not a URL — save to disk manually

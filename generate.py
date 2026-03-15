@@ -3,23 +3,14 @@ import os
 import time
 import uuid
 
-import google.generativeai as genai
-from google.generativeai import types
-from google.generativeai.types import HarmBlockThreshold, HarmCategory
+from google import genai
+from google.genai import types
 from PIL import Image
 
 from config import GEMINI_API_KEY, IMAGE_DIR, WATERCOLOR_PROMPT
 
-genai.configure(api_key=GEMINI_API_KEY)
-
-_model = genai.GenerativeModel(model_name="gemini-2.0-flash-preview-image-generation")
-
-_safety = {
-    HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-    HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-    HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
-}
+_client = genai.Client(api_key=GEMINI_API_KEY)
+_MODEL = "gemini-2.5-flash-image"
 
 
 def generate_watercolor(prompt: str) -> tuple[bytes, bool, int]:
@@ -27,10 +18,30 @@ def generate_watercolor(prompt: str) -> tuple[bytes, bool, int]:
 
     start = time.time()
     try:
-        response = _model.generate_content(
+        response = _client.models.generate_content(
+            model=_MODEL,
             contents=full_prompt,
-            generation_config=types.GenerationConfig(response_modalities=["IMAGE"]),
-            safety_settings=_safety,
+            config=types.GenerateContentConfig(
+                response_modalities=["IMAGE"],
+                safety_settings=[
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold="BLOCK_NONE",
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HATE_SPEECH",
+                        threshold="BLOCK_MEDIUM_AND_ABOVE",
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_HARASSMENT",
+                        threshold="BLOCK_MEDIUM_AND_ABOVE",
+                    ),
+                    types.SafetySetting(
+                        category="HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold="BLOCK_MEDIUM_AND_ABOVE",
+                    ),
+                ],
+            ),
         )
     except Exception as e:
         raise RuntimeError(str(e))
@@ -41,7 +52,7 @@ def generate_watercolor(prompt: str) -> tuple[bytes, bool, int]:
 
     candidate = response.candidates[0]
 
-    if str(candidate.finish_reason) == "SAFETY":
+    if candidate.finish_reason and str(candidate.finish_reason) == "SAFETY":
         raise RuntimeError("Content blocked by safety filter")
 
     image_bytes = None
@@ -56,7 +67,7 @@ def generate_watercolor(prompt: str) -> tuple[bytes, bool, int]:
     nsfw_flagged = any(
         str(r.category) == "HARM_CATEGORY_SEXUALLY_EXPLICIT"
         and str(r.probability) in ("MEDIUM", "HIGH")
-        for r in candidate.safety_ratings
+        for r in (candidate.safety_ratings or [])
     )
 
     return image_bytes, nsfw_flagged, duration_ms

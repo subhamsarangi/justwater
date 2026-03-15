@@ -298,3 +298,33 @@ body::before {
 .badge-status.done    { background: #e6f2eb; color: var(--color-success); }
 .badge-status.pending { background: #e8f0f5; color: var(--color-accent-2); }
 .badge-status.failed  { background: #f5e8e8; color: var(--color-error); }
+
+/* Suggestion chips */
+.suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.suggestions-label {
+  font-size: 0.78rem;
+  color: var(--color-ink-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-right: 0.25rem;
+}
+.suggestion-chip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  color: var(--color-ink-muted);
+  font-family: 'DM Sans', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s;
+  white-space: nowrap;
+}
+.suggestion-chip:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
