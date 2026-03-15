@@ -231,8 +231,6 @@ async def profile(request: Request):
 @app.get("/")
 async def index(request: Request):
     user = await current_user(request)
-    if not user:
-        return RedirectResponse(url="/auth", status_code=303)
     recent_images = await get_recent_images(10)
     return templates.TemplateResponse(
         "index.html", {"request": request, "user": user, "recent_images": recent_images}

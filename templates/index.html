@@ -23,9 +23,11 @@
   <div class="col-12 col-md-8 col-lg-6">
 
     <div class="hero-text text-center mb-4">
-      <h1 class="display-heading">Describe a scene.</h1>
-      <p class="subheading">We'll paint it in watercolor.</p>
+      <h1 class="display-heading">Art from words.</h1>
+      <p class="subheading">Two styles. One prompt. Painted by AI.</p>
     </div>
+
+    {% if user %}
 
     {% if error %}
     <div class="alert-error mb-3">{{ error }}</div>
@@ -61,6 +63,21 @@
       </div>
     </form>
 
+    {% else %}
+
+    <div class="text-center">
+      <p class="subheading mb-4">Write anything. Just Water turns it into a watercolor and an ink wash painting — simultaneously, in seconds.</p>
+      <div class="landing-features mb-5">
+        <span class="landing-feature">🎨 Watercolor &amp; ink wash styles</span>
+        <span class="landing-feature">⚡ Two images in parallel</span>
+        <span class="landing-feature">🖼 Personal gallery</span>
+        <span class="landing-feature">📱 Works on mobile</span>
+      </div>
+      <a href="/auth" class="btn-generate">Start painting →</a>
+    </div>
+
+    {% endif %}
+
   </div>
 </div>
 
@@ -75,6 +92,7 @@
 
 {% block scripts %}
 <script>
+  {% if user %}
   initWordCounter('prompt', 'word-counter', 'submit-btn', 50);
   $('#generate-form').on('submit', function() {
     $('#btn-text').text('Painting…');
@@ -87,5 +105,6 @@
     $('#prompt').trigger('input');
     $('#prompt').focus();
   });
+  {% endif %}
 </script>
 {% endblock %}

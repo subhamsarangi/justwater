@@ -709,3 +709,19 @@ body::before {
   color: var(--color-accent);
   transform: scale(1.1);
 }
+
+/* Landing page (guest view) */
+.landing-features {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+}
+.landing-feature {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
+  color: var(--color-ink-muted);
+}

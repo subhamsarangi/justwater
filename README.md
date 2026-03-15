@@ -13,7 +13,7 @@
 ---
 
 <p align="center">
-  <img src="static/images/92bfb2a0-b4ee-4cdd-9962-321cd836c1d0.png" alt="Example generation" width="480" style="border-radius:12px;" />
+  <img src="static/others/92bfb2a0-b4ee-4cdd-9962-321cd836c1d0.png" alt="Example generation" width="480" style="border-radius:12px;" />
 </p>
 
 ---
