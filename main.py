@@ -293,3 +293,11 @@ async def gallery(request: Request):
     return templates.TemplateResponse(
         "gallery.html", {"request": request, "jobs": jobs, "user": user}
     )
+
+
+@app.get("/privacy")
+async def privacy(request: Request):
+    user = await current_user(request)
+    return templates.TemplateResponse(
+        "privacy.html", {"request": request, "user": user}
+    )

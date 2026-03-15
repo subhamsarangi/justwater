@@ -27,3 +27,9 @@ function initWordCounter(textareaId, counterId, btnId, max) {
   textarea.on('input', update);
   update();
 }
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/static/sw.js');
+  });
+}

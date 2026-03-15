@@ -148,7 +148,7 @@ async def create_job(prompt: str, user_id: str = None) -> str:
     async with pool.acquire() as conn:
         await conn.execute(
             """INSERT INTO jobs (id, user_id, prompt, status, created_at)
-               VALUES ($1, $2, 'pending', $3, $4)""",
+               VALUES ($1, $2, $3, 'pending', $4)""",
             job_id,
             user_id,
             prompt,

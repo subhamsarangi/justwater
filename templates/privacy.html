@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — Just Water{% endblock %}
+{% block meta_description %}Privacy Policy for Just Water — how we handle your data, prompts, and generated images.{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-7">
+
+    <h1 class="display-heading mb-1">Privacy Policy</h1>
+    <p class="meta-text mb-5">Last updated: June 2025</p>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">1. What We Collect</h2>
+      <p>When you create an account, we store your name, email address, and (if you sign in with Google) your Google profile ID and avatar. We do not store your password in plain text — it is hashed using bcrypt.</p>
+      <p>When you generate an image, we store the text prompt you submitted, the resulting image file, generation time, and whether the content was flagged by Gemini's safety system.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">2. How We Use It</h2>
+      <p>Your data is used solely to operate the service — to generate images, display your gallery, and show your usage stats on your profile. We do not sell, share, or use your data for advertising.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">3. Third-Party Services</h2>
+      <p>Your prompts are sent to <a href="https://ai.google.dev" target="_blank" rel="noopener" class="privacy-link">Google Gemini API</a> to generate images. Google's own privacy policy applies to that processing. If you sign in with Google, Google's OAuth service is used for authentication.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">4. Generated Images</h2>
+      <p>Images you generate are stored on our server and are accessible to you via your gallery. They are not publicly indexed or shared with other users.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">5. Cookies & Sessions</h2>
+      <p>We use a single HTTP-only session cookie to keep you signed in. No tracking cookies, analytics cookies, or third-party cookies are set by this application.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">6. Data Retention</h2>
+      <p>Your account and generated images are retained as long as your account exists. You can request deletion by contacting us directly.</p>
+    </div>
+
+    <div class="privacy-section">
+      <h2 class="privacy-heading">7. Contact</h2>
+      <p>Questions? Reach out via <a href="https://github.com/subhamsarangi" target="_blank" rel="noopener" class="privacy-link">GitHub</a>.</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

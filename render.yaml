@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: justwater
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: postgresql://neondb_owner:npg_q3bUJw1pELYd@ep-misty-fire-a4ixxsv1-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        sync: false  

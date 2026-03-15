@@ -1,4 +1,4 @@
-lets do auth. aadd user table and also add owner row in the table. make a simple auth route with signin/signup tabs. include google auth option. also make a profile page showing how many images are created and much token usage is used and how muuch is remaining. API Key Source:   https://aistudio.google.com
+API Key Source:   https://aistudio.google.com
 Model:            gemini-2.5-flash-image
 Package:          google-genai 1.67.0
 SDK Docs:         https://googleapis.github.io/python-genai/
