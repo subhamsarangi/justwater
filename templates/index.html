@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Watercolor AI — Generate{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+
+    <div class="hero-text text-center mb-4">
+      <h1 class="display-heading">Describe a scene.</h1>
+      <p class="subheading">We'll paint it in watercolor.</p>
+    </div>
+
+    {% if error %}
+    <div class="alert-error mb-3">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/generate" id="generate-form">
+      <div class="mb-2">
+        <textarea
+          class="form-textarea"
+          name="prompt"
+          id="prompt"
+          rows="4"
+          placeholder="a fox sitting by a moonlit river, autumn leaves falling…"
+          maxlength="500"
+        >{{ prompt or '' }}</textarea>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <span class="word-counter" id="word-counter">0 / 50 words</span>
+      </div>
+      <div class="text-center">
+        <button type="submit" class="btn-generate" id="submit-btn">
+          <span id="btn-text">Generate →</span>
+          <span id="btn-spinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<div class="splash-decoration" aria-hidden="true">
+  <svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="160" cy="160" rx="140" ry="100" fill="#6b9fb5" opacity="0.07" transform="rotate(-20 160 160)"/>
+    <ellipse cx="180" cy="150" rx="90" ry="60" fill="#c0714b" opacity="0.06" transform="rotate(15 180 150)"/>
+    <ellipse cx="140" cy="175" rx="70" ry="45" fill="#5a8a6a" opacity="0.05" transform="rotate(-10 140 175)"/>
+  </svg>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  initWordCounter('prompt', 'word-counter', 'submit-btn', 50);
+  $('#generate-form').on('submit', function() {
+    $('#btn-text').text('Painting…');
+    $('#btn-spinner').removeClass('d-none');
+    $('#submit-btn').prop('disabled', true);
+  });
+</script>
+{% endblock %}

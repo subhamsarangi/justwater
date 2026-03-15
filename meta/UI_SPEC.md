@@ -47,7 +47,7 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('/static/images/paper-texture.png');
+  background-image: url('/static/images/paper-texture.jpg');
   opacity: 0.04;
   pointer-events: none;
   z-index: 9999;

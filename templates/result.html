@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Result — Watercolor AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6 text-center">
+
+    {% if job.status == 'done' %}
+
+      <div class="image-wrapper mb-4">
+        <img
+          src="{{ job.image_url }}"
+          alt="Generated watercolor"
+          class="generated-image"
+          id="result-image"
+        />
+      </div>
+
+      <div class="d-flex justify-content-center gap-3 mb-4 flex-wrap">
+        <button class="btn-secondary-action" id="reveal-btn">Reveal</button>
+        <a class="btn-secondary-action" href="{{ job.image_url }}" download>Download</a>
+        <a class="btn-generate" href="/">New →</a>
+      </div>
+
+      <p class="prompt-preview">"{{ job.prompt }}"</p>
+      <p class="meta-text mt-1">Generated in {{ "%.1f"|format(job.duration_ms / 1000) }}s</p>
+
+    {% else %}
+
+      <div class="error-card mb-4">
+        <div class="error-icon">💧</div>
+        <h3>Couldn't paint this one</h3>
+        <p class="error-reason">{{ job.error_message or "Unknown error" }}</p>
+      </div>
+
+      <a class="btn-generate" href="/">Try Again</a>
+
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  {% if job.status == 'done' %}
+    const durationS = ({{ job.duration_ms }} / 1000).toFixed(1);
+    showToast('✓ Done in ' + durationS + 's', 'success');
+
+    $('#reveal-btn').on('click', function() {
+      const img = $('#result-image');
+      img.toggleClass('revealed');
+      $(this).text(img.hasClass('revealed') ? 'Blur' : 'Reveal');
+    });
+  {% else %}
+    showToast('✗ Failed: {{ job.error_message | default("Generation failed") | replace("'", "\\'") }}', 'error');
+  {% endif %}
+</script>
+{% endblock %}

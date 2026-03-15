@@ -47,7 +47,7 @@ Work through these in order. Each section should be fully working before moving 
 
 - [ ] `static/css/style.css` — CSS variables, paper texture, typography, component overrides
 - [ ] `static/js/app.js` — toast helper, word counter utility, any shared functions
-- [ ] `static/images/paper-texture.png` — subtle grain image (can use a CC0 asset or generate via CSS)
+- [ ] `static/images/paper-texture.jpg` — subtle grain image (can use a CC0 asset or generate via CSS)
 
 ---
 

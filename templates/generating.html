@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Painting your scene…{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center text-center">
+  <div class="col-12 col-md-6">
+
+    <div class="paint-loader" aria-label="Loading">
+      <div class="paint-stroke"></div>
+      <div class="paint-stroke"></div>
+      <div class="paint-stroke"></div>
+    </div>
+
+    <h2 class="generating-title mt-4">Painting your scene…</h2>
+    <p class="prompt-preview mt-2">"{{ job.prompt }}"</p>
+    <p class="elapsed-timer mt-3" id="elapsed">0:00</p>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const JOB_ID = "{{ job.id }}";
+  let seconds = 0;
+
+  const timer = setInterval(function() {
+    seconds++;
+    const m = Math.floor(seconds / 60);
+    const s = String(seconds % 60).padStart(2, '0');
+    $('#elapsed').text(m + ':' + s);
+  }, 1000);
+
+  function poll(jobId) {
+    $.getJSON('/api/status/' + jobId, function(data) {
+      if (data.status === 'pending') {
+        setTimeout(function() { poll(jobId); }, 2000);
+      } else {
+        clearInterval(timer);
+        window.location.href = '/result/' + jobId;
+      }
+    }).fail(function() {
+      setTimeout(function() { poll(jobId); }, 3000);
+    });
+  }
+
+  poll(JOB_ID);
+</script>
+{% endblock %}

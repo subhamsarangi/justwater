@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Gallery — Watercolor AI{% endblock %}
+
+{% block content %}
+<h2 class="section-heading mb-4">Past Works</h2>
+
+{% if not jobs %}
+  <p class="text-muted text-center py-5">No generations yet. <a href="/">Create one →</a></p>
+{% else %}
+  <div class="row g-3">
+    {% for job in jobs %}
+    <div class="col-6 col-md-4 col-lg-3">
+      <a href="/result/{{ job.id }}" class="gallery-card-link">
+        <div class="gallery-card">
+
+          {% if job.status == 'done' %}
+            <div class="gallery-thumb-wrap">
+              <img src="{{ job.image_url }}" alt="Watercolor" class="gallery-thumb generated-image" />
+            </div>
+          {% elif job.status == 'pending' %}
+            <div class="gallery-thumb-placeholder pending">
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+            </div>
+          {% else %}
+            <div class="gallery-thumb-placeholder failed">💧</div>
+          {% endif %}
+
+          <div class="gallery-card-body">
+            <p class="gallery-prompt">{{ job.prompt[:60] }}{% if job.prompt|length > 60 %}…{% endif %}</p>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+              {% if job.status == 'done' %}
+                <span class="badge-status done">Done</span>
+                <span class="meta-text">{{ "%.1f"|format(job.duration_ms / 1000) }}s</span>
+              {% elif job.status == 'pending' %}
+                <span class="badge-status pending">Pending</span>
+              {% else %}
+                <span class="badge-status failed">Failed</span>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </a>
+    </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
