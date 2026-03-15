@@ -11,3 +11,4 @@ itsdangerous
 httpx
 passlib[bcrypt]
 boto3
+python-multipart
