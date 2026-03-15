@@ -658,21 +658,21 @@ body::before {
   gap: 0.6rem;
 }
 .share-fab-toggle {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-success);
   color: #fff;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(192,113,75,0.4);
+  box-shadow: 0 4px 16px rgba(90,138,106,0.4);
   transition: background 0.2s, transform 0.2s;
   flex-shrink: 0;
 }
-.share-fab-toggle:hover { background: #a85e3c; }
+.share-fab-toggle:hover { background: #4a7a5a; }
 .share-fab.open .share-fab-toggle { transform: rotate(45deg); }
 .share-fab-menu {
   display: flex;

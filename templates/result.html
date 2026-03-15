@@ -120,17 +120,21 @@
 {% block scripts %}
 <script>
   {% if job_wc.status == 'done' or job_ink.status == 'done' %}
+    {% if fresh %}
     {% set dur = job_wc.duration_ms or job_ink.duration_ms or 0 %}
     const durationS = ({{ dur }} / 1000).toFixed(1);
     showToast('✓ Done in ' + durationS + 's', 'success');
+    {% endif %}
 
     $('#reveal-btn').on('click', function() {
       $('.generated-image').toggleClass('revealed');
       $(this).text($('#result-image-1').hasClass('revealed') ? 'Blur' : 'Reveal');
     });
   {% else %}
+    {% if fresh %}
     {% set err = job_wc.error_message or job_ink.error_message or "Generation failed" %}
     showToast('✗ Failed: {{ err | replace("'", "\\'") }}', 'error');
+    {% endif %}
   {% endif %}
 
   const shareUrl = window.location.href;

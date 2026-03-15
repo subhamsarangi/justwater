@@ -258,6 +258,19 @@ async def generate(
             status_code=422,
         )
 
+    user_stats = await get_user_stats(user["id"])
+    if user_stats["tokens_used"] >= TOKEN_LIMIT:
+        return templates.TemplateResponse(
+            "index.html",
+            {
+                "request": request,
+                "user": user,
+                "error": "You've used all your tokens. No more images can be generated.",
+                "prompt": prompt,
+            },
+            status_code=429,
+        )
+
     recent = await count_recent_jobs(user["id"], seconds=60)
     if recent >= 4:
         return templates.TemplateResponse(
@@ -310,7 +323,7 @@ async def api_status(prompt_id: str):
 
 
 @app.get("/result/{prompt_id}")
-async def result(request: Request, prompt_id: str):
+async def result(request: Request, prompt_id: str, new: int = 0):
     user = await current_user(request)
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
@@ -327,6 +340,7 @@ async def result(request: Request, prompt_id: str):
             "job_ink": job_ink,
             "prompt_id": prompt_id,
             "user": user,
+            "fresh": new == 1,
         },
     )
 

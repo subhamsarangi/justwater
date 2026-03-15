@@ -69,7 +69,7 @@
       </div>
       <div class="d-flex justify-content-between">
         <span class="meta-text">{{ "{:,}".format(stats.tokens_used) }} used</span>
-        <span class="meta-text">{{ "{:,}".format(token_limit - stats.tokens_used) }} remaining</span>
+        <span class="meta-text">{{ "{:,}".format([token_limit - stats.tokens_used, 0] | max) }} remaining</span>
       </div>
       <p class="meta-text mt-1 text-center">Limit: {{ "{:,}".format(token_limit) }} tokens</p>
     </div>

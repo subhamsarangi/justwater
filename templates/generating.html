@@ -38,7 +38,7 @@
         setTimeout(function() { poll(promptId); }, 2000);
       } else {
         clearInterval(timer);
-        window.location.href = '/result/' + promptId;
+        window.location.href = '/result/' + promptId + '?new=1';
       }
     }).fail(function() {
       setTimeout(function() { poll(promptId); }, 3000);
