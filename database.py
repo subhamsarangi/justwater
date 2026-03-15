@@ -27,7 +27,19 @@ async def init_db():
                 google_id     TEXT UNIQUE,
                 role          TEXT NOT NULL DEFAULT 'user',
                 tokens_used   INTEGER NOT NULL DEFAULT 0,
+                onboarding_done BOOLEAN NOT NULL DEFAULT FALSE,
                 created_at    TIMESTAMPTZ NOT NULL
+            )
+        """
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS onboarding_answers (
+                id         TEXT PRIMARY KEY,
+                user_id    TEXT REFERENCES users(id) ON DELETE CASCADE,
+                question   TEXT NOT NULL,
+                answer     TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL
             )
         """
         )
@@ -48,6 +60,20 @@ async def init_db():
                 tokens_used     INTEGER DEFAULT 0,
                 file_size_bytes BIGINT DEFAULT 0,
                 created_at      TIMESTAMPTZ NOT NULL
+            )
+        """
+        )
+        await conn.execute(
+            """ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN NOT NULL DEFAULT FALSE"""
+        )
+        await conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS onboarding_answers (
+                id         TEXT PRIMARY KEY,
+                user_id    TEXT REFERENCES users(id) ON DELETE CASCADE,
+                question   TEXT NOT NULL,
+                answer     TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL
             )
         """
         )
@@ -296,3 +322,18 @@ async def count_recent_jobs(user_id: str, seconds: int = 60) -> int:
             user_id,
             str(seconds),
         )
+
+
+async def save_onboarding_answer(user_id: str, question: str, answer: str):
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            """INSERT INTO onboarding_answers (id, user_id, question, answer, created_at)
+               VALUES ($1,$2,$3,$4,$5)""",
+            str(uuid.uuid4()),
+            user_id,
+            question,
+            answer,
+            datetime.now(timezone.utc),
+        )
+        await conn.execute("UPDATE users SET onboarding_done=TRUE WHERE id=$1", user_id)

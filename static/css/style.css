@@ -750,3 +750,42 @@ body::before {
   font-size: 0.85rem;
   color: var(--color-ink-muted);
 }
+
+/* Onboarding */
+.onboarding-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  text-align: left;
+}
+.onboarding-option {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  font-size: 0.9rem;
+  color: var(--color-ink);
+}
+.onboarding-option:has(input:checked) {
+  border-color: var(--color-accent);
+  background: var(--color-bg);
+}
+.onboarding-option input[type="radio"] {
+  accent-color: var(--color-accent);
+  flex-shrink: 0;
+}
+.onboarding-skip {
+  background: none;
+  border: none;
+  color: var(--color-ink-muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  text-decoration: underline;
+  font-family: 'DM Sans', sans-serif;
+}
+.onboarding-skip:hover { color: var(--color-ink); }

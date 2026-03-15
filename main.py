@@ -37,6 +37,7 @@ from database import (
     delete_job,
     delete_jobs_by_prompt_id,
     count_recent_jobs,
+    save_onboarding_answer,
 )
 from generate import _call_gemini, save_image, delete_image
 from auth import (
@@ -219,9 +220,10 @@ async def profile(request: Request):
     if not user:
         return RedirectResponse(url="/auth", status_code=303)
     stats = await get_user_stats(user["id"])
+    limit = 1_000_000 if user.get("role") == "owner" else TOKEN_LIMIT
     return templates.TemplateResponse(
         "profile.html",
-        {"request": request, "user": user, "stats": stats, "token_limit": TOKEN_LIMIT},
+        {"request": request, "user": user, "stats": stats, "token_limit": limit},
     )
 
 
@@ -232,8 +234,19 @@ async def profile(request: Request):
 async def index(request: Request):
     user = await current_user(request)
     recent_images = await get_recent_images(10)
+    show_onboarding = (
+        user
+        and not user.get("onboarding_done")
+        and not request.session.get("onboarding_skipped")
+    )
     return templates.TemplateResponse(
-        "index.html", {"request": request, "user": user, "recent_images": recent_images}
+        "index.html",
+        {
+            "request": request,
+            "user": user,
+            "recent_images": recent_images,
+            "show_onboarding": show_onboarding,
+        },
     )
 
 
@@ -259,7 +272,8 @@ async def generate(
         )
 
     user_stats = await get_user_stats(user["id"])
-    if user_stats["tokens_used"] >= TOKEN_LIMIT:
+    limit = 1_000_000 if user.get("role") == "owner" else TOKEN_LIMIT
+    if user_stats["tokens_used"] >= limit:
         return templates.TemplateResponse(
             "index.html",
             {
@@ -384,6 +398,24 @@ async def privacy(request: Request):
     return templates.TemplateResponse(
         "privacy.html", {"request": request, "user": user}
     )
+
+
+@app.post("/onboarding/submit")
+async def onboarding_submit(request: Request, art_experience: str = Form(...)):
+    user = await current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth", status_code=303)
+    await save_onboarding_answer(user["id"], "art_experience", art_experience)
+    return RedirectResponse(url="/", status_code=303)
+
+
+@app.post("/onboarding/skip")
+async def onboarding_skip(request: Request):
+    user = await current_user(request)
+    if not user:
+        return RedirectResponse(url="/auth", status_code=303)
+    request.session["onboarding_skipped"] = True
+    return RedirectResponse(url="/", status_code=303)
 
 
 @app.post("/delete/{job_id}")

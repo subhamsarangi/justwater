@@ -6,7 +6,45 @@
 
 {% block content %}
 
-{% if recent_images and recent_images|length >= 4 %}
+{% if show_onboarding %}
+<div class="modal-overlay active" id="onboarding-modal">
+  <div class="modal-box" style="max-width:460px;">
+    <p class="modal-title">Welcome to Just Water 🎨</p>
+    <p class="modal-body">One quick question before you start painting.</p>
+
+    <form method="POST" action="/onboarding/submit" id="onboarding-form">
+      <p class="meta-text mb-2" style="text-align:left; font-size:0.85rem; color: var(--color-ink);">How would you describe your experience with art?</p>
+      <div class="onboarding-options">
+        <label class="onboarding-option">
+          <input type="radio" name="art_experience" value="none" required />
+          <span>I'm not an artist at all</span>
+        </label>
+        <label class="onboarding-option">
+          <input type="radio" name="art_experience" value="hobbyist" />
+          <span>I dabble occasionally</span>
+        </label>
+        <label class="onboarding-option">
+          <input type="radio" name="art_experience" value="enthusiast" />
+          <span>I'm a serious enthusiast</span>
+        </label>
+        <label class="onboarding-option">
+          <input type="radio" name="art_experience" value="professional" />
+          <span>I'm a professional artist</span>
+        </label>
+      </div>
+      <div class="modal-actions mt-4">
+        <button type="submit" class="btn-generate">Continue →</button>
+      </div>
+    </form>
+
+    <form method="POST" action="/onboarding/skip" style="margin-top:0.75rem; text-align:center;">
+      <button type="submit" class="onboarding-skip">Answer later</button>
+    </form>
+  </div>
+</div>
+{% endif %}
+
+
 <div class="marquee-wrap mb-5" aria-hidden="true">
   <div class="marquee-track" style="animation-duration: {{ recent_images|length * 3 }}s">
     {% for img in recent_images %}
