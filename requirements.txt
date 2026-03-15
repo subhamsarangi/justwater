@@ -6,3 +6,7 @@ google-genai
 aiofiles
 pillow
 asyncpg
+authlib
+itsdangerous
+httpx
+passlib[bcrypt]

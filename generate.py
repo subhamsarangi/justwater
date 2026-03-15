@@ -70,7 +70,13 @@ def generate_watercolor(prompt: str) -> tuple[bytes, bool, int]:
         for r in (candidate.safety_ratings or [])
     )
 
-    return image_bytes, nsfw_flagged, duration_ms
+    tokens_used = 0
+    if response.usage_metadata:
+        tokens_used = (response.usage_metadata.prompt_token_count or 0) + (
+            response.usage_metadata.candidates_token_count or 0
+        )
+
+    return image_bytes, nsfw_flagged, duration_ms, tokens_used
 
 
 def save_image(image_bytes: bytes) -> tuple[str, str]:

@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Profile — Watercolor AI{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+
+    <!-- User info -->
+    <div class="profile-card mb-4">
+      <div class="d-flex align-items-center gap-3">
+        {% if user.avatar_url %}
+          <img src="{{ user.avatar_url }}" class="profile-avatar" alt="avatar" />
+        {% else %}
+          <div class="profile-avatar-placeholder">{{ (user.name or user.email)[0].upper() }}</div>
+        {% endif %}
+        <div>
+          <h2 class="profile-name">{{ user.name or "Anonymous" }}</h2>
+          <p class="meta-text">{{ user.email }}</p>
+          {% if user.role == 'owner' %}
+            <span class="badge-status done">Owner</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="row g-3 mb-4">
+      <div class="col-4">
+        <div class="stat-card">
+          <div class="stat-value">{{ stats.total }}</div>
+          <div class="stat-label">Total</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--color-success)">{{ stats.done }}</div>
+          <div class="stat-label">Done</div>
+        </div>
+      </div>
+      <div class="col-4">
+        <div class="stat-card">
+          <div class="stat-value" style="color: var(--color-error)">{{ stats.failed }}</div>
+          <div class="stat-label">Failed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Token usage -->
+    <div class="profile-card">
+      <h3 class="section-heading mb-3" style="font-size:1.1rem;">Token Usage</h3>
+      {% set pct = [(stats.tokens_used / token_limit * 100), 100] | min %}
+      <div class="token-bar-wrap mb-2">
+        <div class="token-bar" style="width: {{ pct }}%; {% if pct > 80 %}background: var(--color-error);{% elif pct > 50 %}background: var(--color-accent);{% endif %}"></div>
+      </div>
+      <div class="d-flex justify-content-between">
+        <span class="meta-text">{{ "{:,}".format(stats.tokens_used) }} used</span>
+        <span class="meta-text">{{ "{:,}".format(token_limit - stats.tokens_used) }} remaining</span>
+      </div>
+      <p class="meta-text mt-1 text-center">Limit: {{ "{:,}".format(token_limit) }} tokens</p>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

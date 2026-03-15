@@ -15,7 +15,20 @@
 <nav class="navbar">
   <div class="container">
     <a class="navbar-brand" href="/">🎨 Watercolor AI</a>
-    <a class="nav-link-gallery" href="/gallery">Gallery</a>
+    <div class="nav-actions">
+      <a class="nav-link-gallery" href="/gallery">Gallery</a>
+      {% if user is defined and user %}
+        <a class="nav-link-gallery" href="/profile">
+          {% if user.avatar_url %}
+            <img src="{{ user.avatar_url }}" class="nav-avatar" alt="avatar" />
+          {% endif %}
+          {{ user.name or user.email }}
+        </a>
+        <a class="nav-link-gallery" href="/auth/logout">Sign out</a>
+      {% else %}
+        <a class="nav-link-gallery" href="/auth">Sign in</a>
+      {% endif %}
+    </div>
   </div>
 </nav>
 
