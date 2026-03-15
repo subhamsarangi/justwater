@@ -51,7 +51,8 @@ from auth import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    os.makedirs(IMAGE_DIR, exist_ok=True)
+    if IMAGE_DIR:
+        os.makedirs(IMAGE_DIR, exist_ok=True)
     await init_db()
     yield
 
