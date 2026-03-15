@@ -45,6 +45,7 @@
 {% endif %}
 
 
+{% if recent_images and recent_images|length >= 4 %}
 <div class="marquee-wrap mb-5" aria-hidden="true">
   <div class="marquee-track" style="animation-duration: {{ recent_images|length * 3 }}s">
     {% for img in recent_images %}
